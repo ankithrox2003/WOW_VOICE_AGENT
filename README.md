@@ -8,7 +8,7 @@ property consultant.
 There is only ever one synthetic voice on the call: Rohan's. You are the
 caller, speaking into your microphone.
 
-**Recorded demo calls: [`deliverables/`](deliverables/)** — full audio of each
+**Recorded demo calls: [`deliverables/`](deliverables/)**  full audio of each
 call flow plus transcripts and the qualification outcome for each.
 
 | Layer | What it uses | Runs where |
