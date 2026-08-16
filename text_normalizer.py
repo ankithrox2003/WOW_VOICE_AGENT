@@ -134,6 +134,9 @@ def normalize_for_speech(text: str) -> str:
 
     text = _apply_pronunciations(text)
     text = re.sub(r"\s+([,.!?])", r"\1", text)
+    # Removing a bracketed aside leaves its surrounding punctuation orphaned,
+    # e.g. "our expert, [no name], will call" -> "our expert,, will call".
+    text = re.sub(r",\s*(?=[,.!?])", "", text)
     text = re.sub(r"\s+", " ", text).strip()
 
     # Unit expansion can swallow a sentence-final period ("sq.ft." -> "square

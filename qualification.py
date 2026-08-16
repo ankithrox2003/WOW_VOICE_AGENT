@@ -28,6 +28,14 @@ _QUESTION_FOR = {
     TIMELINE: "whether a December twenty twenty nine possession suits them",
 }
 
+# Short topic names, for telling the model which questions are now off limits.
+_TOPIC_FOR = {
+    INTENT: "their reason for buying",
+    GEOGRAPHY: "the location or distance",
+    BUDGET: "their budget or the price",
+    TIMELINE: "possession timing",
+}
+
 # Each entry maps a checkpoint to (regex, resolved value). Hindi/Hinglish
 # equivalents are included since the agent supports code-switching callers.
 _PATTERNS = {
@@ -41,7 +49,10 @@ _PATTERNS = {
     ],
     BUDGET: [
         (r"(\btoo expensive\b|\bout of my\b|\bbeyond my\b|\bcan.?t afford\b|\bcannot afford\b|\bbit steep\b|\btoo much\b|\bmehenga\b)", "below range"),
-        (r"(\bthat works\b|\bcomfortable\b|\bno problem\b|\bbudget is fine\b|\baffordable\b|\bwithin (my|our) budget\b|\bmanageable\b)", "fits"),
+        # Deliberately specific: generic approval like "that works" or
+        # "comfortable" is how callers answer the geography and timeline
+        # questions too, so it can't be treated as budget evidence.
+        (r"(\bbudget is fine\b|\baffordable\b|\bwithin (my|our) budget\b|\bbudget.{0,12}(no problem|not a problem|is okay)\b)", "fits"),
     ],
     TIMELINE: [
         (r"\b(long[\s-]?term|no hurry|not in a rush|fine with (that|2029)|20\s?29|that horizon works|hold it|patient)\b", "comfortable"),
@@ -55,26 +66,89 @@ _PATTERNS = {
 # "only 45 lakh" and "up to 2 crore" resolve correctly on the numbers.
 ENTRY_PRICE_LAKHS = 92.4
 
-_AMOUNT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(lakhs?|lacs?|crores?|cr)\b", re.IGNORECASE)
+_UNIT_RE = r"(lakhs?|lacs?|crores?|cr)\b"
+_AMOUNT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*" + _UNIT_RE, re.IGNORECASE)
+
+# Speech-to-text writes figures as words far more often than as digits, so
+# "two crores" and "one and a half crore" have to parse as well as "1.5 cr".
+_NUMBER_WORDS = {
+    "a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+    "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60,
+    "seventy": 70, "eighty": 80, "ninety": 90,
+    "ek": 1, "do": 2, "teen": 3, "char": 4, "paanch": 5, "das": 10,
+}
+
+_WORD_AMOUNT_RE = re.compile(
+    r"((?:(?:" + "|".join(_NUMBER_WORDS) + r"|hundred|and|half|point)\s+)+)" + _UNIT_RE,
+    re.IGNORECASE,
+)
+
+
+def _words_to_number(phrase: str):
+    """Turn 'one and a half' or 'forty five' into a number, or None."""
+    tokens = phrase.lower().split()
+    total = 0.0
+    seen_any = False
+    pending_half = False
+
+    for i, token in enumerate(tokens):
+        if token == "half":
+            # "one and a half" -> 1.5; "half a crore" -> 0.5
+            total += 0.5
+            seen_any = True
+        elif token == "hundred":
+            total = (total or 1) * 100
+        elif token == "point":
+            fraction = [_NUMBER_WORDS.get(t, 0) for t in tokens[i + 1:] if t in _NUMBER_WORDS]
+            if fraction:
+                total += fraction[0] / 10
+            break
+        elif token == "and":
+            pending_half = True
+        elif token in _NUMBER_WORDS:
+            # Don't let the "a" in "and a half" register as another 1.
+            if token in ("a", "an") and pending_half:
+                continue
+            total += _NUMBER_WORDS[token]
+            seen_any = True
+
+    return total if seen_any or pending_half else None
+
+
+def _to_lakhs(value: float, unit: str) -> float:
+    return value * (100 if unit.lower().startswith(("crore", "cr")) else 1)
 
 
 def _budget_from_amounts(text: str):
     """Resolve the budget checkpoint from any rupee figure the caller states."""
-    amounts_in_lakhs = []
-    for value, unit in _AMOUNT_RE.findall(text):
-        lakhs = float(value) * (100 if unit.lower().startswith(("crore", "cr")) else 1)
-        amounts_in_lakhs.append(lakhs)
+    amounts_in_lakhs = [
+        _to_lakhs(float(value), unit) for value, unit in _AMOUNT_RE.findall(text)
+    ]
+
+    for phrase, unit in _WORD_AMOUNT_RE.findall(text):
+        value = _words_to_number(phrase)
+        if value:
+            amounts_in_lakhs.append(_to_lakhs(value, unit))
 
     if not amounts_in_lakhs:
         return None
     # Compare against the highest figure mentioned: "80 lakh to 1 crore"
-    # means the ceiling is what matters for fitment.
+    # means the ceiling is what matters.
     return "fits" if max(amounts_in_lakhs) >= ENTRY_PRICE_LAKHS else "below range"
 
 
 # A bare "yes" only means something relative to the question just asked, so
 # these are resolved against the checkpoint that was pending. Intent is
 # excluded: it's a choice between two options, never a yes/no.
+#
+# The length guard matters. "Yes, two crores is the budget I have, tell me
+# what that gets me" opens with an affirmative but is answering about budget,
+# not about whichever question happened to be pending. Only treat a reply as
+# a bare yes/no when there's essentially nothing else in it.
+_BARE_REPLY_MAX_WORDS = 7
 _AFFIRMATION_RE = re.compile(
     r"^\W*(yes|yeah|yep|sure|ok(ay)?|fine|absolutely|of course|no problem|"
     r"that.?s fine|sounds good|haan|haan ji|ji|bilkul|thik hai|theek hai|chalega)\b",
@@ -119,12 +193,18 @@ class QualificationTracker:
                     self.state[checkpoint] = value
                     break
 
-        # Fall back to the question that was actually on the table.
-        if pending in _YES_NO_RESOLUTION and not self.state[pending]:
+        # Fall back to the question that was actually on the table, but only
+        # for replies short enough to be purely a yes or no.
+        stripped = caller_text.strip()
+        if (
+            pending in _YES_NO_RESOLUTION
+            and not self.state[pending]
+            and len(stripped.split()) <= _BARE_REPLY_MAX_WORDS
+        ):
             yes_value, no_value = _YES_NO_RESOLUTION[pending]
-            if _AFFIRMATION_RE.match(caller_text.strip()):
+            if _AFFIRMATION_RE.match(stripped):
                 self.state[pending] = yes_value
-            elif _NEGATION_RE.match(caller_text.strip()):
+            elif _NEGATION_RE.match(stripped):
                 self.state[pending] = no_value
 
     @property
@@ -159,7 +239,13 @@ class QualificationTracker:
             lines.append("Confirmed so far:")
             for checkpoint, value in self.known.items():
                 lines.append(f"  {checkpoint} = {value}")
-            lines.append("These are settled. Move past them without comment.")
+            # Naming the off-limits questions outright works far better than
+            # telling a small model to "move past" the settled ones.
+            settled = ", ".join(_TOPIC_FOR[c] for c in self.known)
+            lines.append(
+                f"Do not ask about {settled} again, in any form, not even to "
+                "confirm. Do not restate these figures back to the caller."
+            )
         else:
             lines.append("Nothing confirmed yet.")
 

@@ -22,6 +22,7 @@ import config
 
 OUTPUT_DIR = "deliverables"
 MP3_BITRATE = "64k"  # plenty for speech; keeps a 3-minute call under 1.5MB
+PROMPT_PDF = "WOW_Rohan_System_Prompt.pdf"  # written by make_prompt_pdf.py
 
 
 def _ffmpeg_available() -> bool:
@@ -95,12 +96,19 @@ def main():
 
     index_path = os.path.join(OUTPUT_DIR, "README.md")
     with open(index_path, "w", encoding="utf-8") as f:
-        f.write("# Recorded Call Flows\n\n")
+        f.write("# Deliverables\n\n")
         f.write(
             "Live calls with the agent. Each MP3 is the full conversation, both "
             "sides; the matching `.txt` is the transcript with the four "
             "qualification checkpoints the agent established.\n\n"
         )
+        if os.path.exists(os.path.join(OUTPUT_DIR, PROMPT_PDF)):
+            f.write(
+                f"The agent's full system prompt is in "
+                f"[{PROMPT_PDF}]({PROMPT_PDF}), generated straight from the "
+                f"running source.\n\n"
+            )
+        f.write("## Call flows\n\n")
         f.write("| Flow | Length | Turns | Audio | Transcript |\n")
         f.write("|---|---|---|---|---|\n")
         for scenario, duration, _size, details in rows:

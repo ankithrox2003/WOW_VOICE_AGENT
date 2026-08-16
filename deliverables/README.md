@@ -1,6 +1,10 @@
-# Recorded Call Flows
+# Deliverables
 
 Live calls with the agent. Each MP3 is the full conversation, both sides; the matching `.txt` is the transcript with the four qualification checkpoints the agent established.
+
+The agent's full system prompt is in [WOW_Rohan_System_Prompt.pdf](WOW_Rohan_System_Prompt.pdf), generated straight from the running source.
+
+## Call flows
 
 | Flow | Length | Turns | Audio | Transcript |
 |---|---|---|---|---|
