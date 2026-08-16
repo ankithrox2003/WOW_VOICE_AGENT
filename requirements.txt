@@ -1,0 +1,34 @@
+# Speech-to-text (local, CTranslate2 backend)
+faster-whisper==1.1.1
+
+# Local LLM client (talks to the Ollama server on localhost:11434)
+ollama==0.4.7
+
+# Text-to-speech.
+# ElevenLabs is the primary voice, reached over plain HTTP (see
+# elevenlabs_client.py), so it needs only `requests` and `python-dotenv`.
+requests>=2.32.0
+python-dotenv==1.0.1
+
+# edge-tts drives Microsoft's neural voices: free, no API key. Used as the
+# first fallback. Keep it current: Microsoft rotates a token that older
+# releases fail on with a 403.
+edge-tts>=7.2.8
+
+# Kokoro is the fully offline fallback voice, used if the network drops.
+kokoro==0.9.4
+soundfile==0.13.1
+
+# Audio capture / playback
+sounddevice==0.5.1
+
+# Voice activity detection for automatic turn-taking.
+# webrtcvad-wheels ships prebuilt Windows binaries; the original `webrtcvad`
+# package requires a C compiler on Windows.
+webrtcvad-wheels==2.0.14
+
+numpy==2.2.6
+scipy==1.15.2
+
+# System prompt PDF deliverable
+reportlab==4.2.5
