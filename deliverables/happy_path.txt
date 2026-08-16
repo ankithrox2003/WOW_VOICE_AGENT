@@ -1,0 +1,34 @@
+Scenario   : happy_path
+Recorded   : 2026-08-15 02:21:47
+Duration   : 103s
+LLM        : llama3.2:3b
+
+QUALIFICATION OUTCOME
+  intent    : self-use
+  geography : comfortable
+  budget    : fits
+  timeline  : not established
+======================================================================
+
+AGENT: Good morning! This is Rohan calling from DivyaSree Developers. I'm reaching out about Whispers of the Wind, our new villa plot project in Nandi Valley, near Nandi Hills. Do you have two minutes to talk?
+
+CALLER: Yes, I do have two minutes than me
+
+AGENT: Thank you so much. So, can you tell me what brings you to Whispers of the Wind today - are you looking at it as a weekend home for yourself, or more as an investment?
+
+CALLER: weekend home and my budget is approximately two crores so yeah
+
+AGENT: So, you're looking at this as a weekend getaway. That's great! Two crores is a significant budget. Does that broadly work for you in terms of the price range we have here?
+
+CALLER: Yes, Tocros is the budget I have acquired. I don't know your price range, but Tocros is my budget Tell me what can I get in Tocros
+
+AGENT: I apologize for not knowing your exact budget earlier. So, you mentioned Tocros as your budget, which is roughly two crores. In that case, our entry plot size starts at around one thousand nine hundred square feet, priced at about eleven lac rupees. However, I'd like to clarify with a Property Expert who can provide more detailed information on the master plan and pricing sheet. Would you be comfortable setting up a follow-up call for that?
+
+CALLER: Yes, I am free on 16th of September
+
+AGENT: Perfect! I'll make sure to schedule it for then. Our Property Expert will reach out to you with all the details on the master plan and pricing sheet. Would you like me to confirm a specific time slot or leave it up to them?
+
+CALLER: And just call me whenever it's fine, I am free the entire day you can just call me
+
+AGENT: Sounds good! I'll make sure to get in touch with you on September 16th. Thank you for your flexibility, and I look forward to speaking with a Property Expert then.
+

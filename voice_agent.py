@@ -42,9 +42,17 @@ GREETING = (
 # the end of the call.
 _END_CALL_RE = re.compile(r"\[?\s*END[_\s-]?CALL\s*\]?", re.IGNORECASE)
 
+# Models occasionally emit a fill-in-later placeholder, e.g. "our expert,
+# [no name mentioned]". The TTS normalizer already drops bracketed text so
+# it's never spoken, but it would otherwise survive into the transcript.
+_PLACEHOLDER_RE = re.compile(r"\s*[\[\{][^\]\}]*[\]\}]\s*")
+
 
 def _strip_end_tag(text: str) -> str:
-    return _END_CALL_RE.sub("", text).strip()
+    text = _END_CALL_RE.sub("", text)
+    text = _PLACEHOLDER_RE.sub(" ", text)
+    text = re.sub(r"\s+([,.!?])", r"\1", text)
+    return re.sub(r"\s{2,}", " ", text).strip()
 
 
 def _speak(text: str, voice: str):

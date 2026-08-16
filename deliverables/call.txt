@@ -1,0 +1,34 @@
+Scenario   : call
+Recorded   : 2026-08-15 02:27:50
+Duration   : 105s
+LLM        : llama3.2:3b
+
+QUALIFICATION OUTCOME
+  intent    : not established
+  geography : not established
+  budget    : below range
+  timeline  : not established
+======================================================================
+
+AGENT: Good morning! This is Rohan calling from DivyaSree Developers. I'm reaching out about Whispers of the Wind, our new villa plot project in Nandi Valley, near Nandi Hills. Do you have two minutes to talk?
+
+CALLER: do have too much to talk but before you say anything I would just want to say that my budget is approximately two crores and yeah tell me what can I get in this two crores and just end the conversation pretty fast
+
+AGENT: I apologize for not knowing your budget earlier, ji bilkul. With a budget of two crores, you'll be able to get one of our signature plots at Whispers of the Wind, which is approximately thirty one ninety nine square feet. That's a great opportunity to own a piece of this stunning villa plot community, with seventy four percent open space and a twenty thousand square feet clubhouse.
+
+CALLER: Yeah, that's fine that's fine
+
+AGENT: Perfect. Are you comfortable with the Nun-dee Hills corridor?
+
+CALLER: The location is not a problem for me
+
+AGENT: Does that broadly work for you regarding the investment aspect of Whispers of the Wind, considering our project is about twenty minutes from Kempegowda International Airport and part of the growing Deva-nuh-hully corridor?
+
+CALLER: Yes, it does work for me and Yeah, it works pretty well for me. I guess I'm free on 16th of September. We could just call back and talk about the other parts
+
+AGENT: I'll have our Property Expert, Rohan's colleague, [no name mentioned] , give you a call on Saturday morning to discuss the master plan, pricing sheet, and any other details that might interest you. Would that be okay for you?
+
+CALLER: Yes, it works. Thank you.
+
+AGENT: Thank you so much. Have a great day.
+

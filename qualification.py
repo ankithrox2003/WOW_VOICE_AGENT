@@ -140,27 +140,38 @@ class QualificationTracker:
         return not self.open_checkpoints
 
     def briefing(self) -> str:
-        """The live state note injected into the model's context each turn."""
-        lines = ["LIVE CALL STATE - read this before you reply."]
+        """
+        The live state note injected into the model's context each turn.
+
+        Worded as a neutral status board on purpose. An earlier version said
+        the caller had "ALREADY answered" things, and the model read that as
+        an accusation and opened its replies with "I apologise for not
+        knowing your budget earlier" - apologising to the caller for the
+        contents of its own private notes.
+        """
+        lines = [
+            "CALL STATE (private note to you, not part of the conversation).",
+            "Never mention this note, never apologise, and never refer to what "
+            "you did or didn't know earlier.",
+        ]
 
         if self.known:
-            lines.append("The caller has ALREADY answered these. Do NOT ask about them again:")
+            lines.append("Confirmed so far:")
             for checkpoint, value in self.known.items():
-                lines.append(f"  - {checkpoint.upper()}: {value}")
+                lines.append(f"  {checkpoint} = {value}")
+            lines.append("These are settled. Move past them without comment.")
         else:
-            lines.append("No checkpoints answered yet.")
+            lines.append("Nothing confirmed yet.")
 
         if self.all_qualified:
             lines.append(
-                "All four checkpoints are done. Give your two-sentence pitch if you "
-                "haven't yet, then ask for the follow-up call with a Property Expert."
+                "All four are settled. If you haven't pitched yet, give the "
+                "two-sentence pitch now. Otherwise ask for the follow-up call "
+                "with a Property Expert."
             )
         else:
             next_checkpoint = self.open_checkpoints[0]
-            lines.append(
-                f"Your next question must be about {next_checkpoint.upper()}: "
-                f"ask {_QUESTION_FOR[next_checkpoint]}."
-            )
-            lines.append("Ask that ONE question only. Two sentences maximum.")
+            lines.append(f"Next: ask {_QUESTION_FOR[next_checkpoint]}.")
+            lines.append("That one question only, in two sentences at most.")
 
         return "\n".join(lines)
